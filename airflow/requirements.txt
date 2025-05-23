@@ -1,0 +1,5 @@
+apache-airflow-providers-apache-hive
+apache-airflow-providers-redis
+requests 
+pandas 
+beautifulsoup4

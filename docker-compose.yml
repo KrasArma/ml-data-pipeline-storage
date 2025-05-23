@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  airflow:
+    build:
+      context: ./airflow
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+
+  redis:
+    build:
+      context: ./redis
+    ports:
+      - "6379:6379"
+
+  hive:
+    image: bde2020/hive:2.3.0
+    environment:
+      HIVE_METASTORE_DB: "mysql" 
+      MYSQL_HOST: "mysql"  
+      MYSQL_PORT: "3306"
+      MYSQL_USER: "hive"
+      MYSQL_PASSWORD: "hive"
+      MYSQL_DATABASE: "hive"
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hive
+      MYSQL_USER: hive
+      MYSQL_PASSWORD: hive
+    ports:
+      - "3306:3306"
+
+  mlflow:
+    build:
+      context: ./mlflow
+    ports:
+      - "5000:5000"
+
+  service:
+    build:
+      context: ./service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mlflow
+      - redis
