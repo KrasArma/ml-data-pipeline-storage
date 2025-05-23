@@ -5,6 +5,7 @@ from modules.extract_data import extract_products_list_cian, extract_stats_wiki
 from modules.prepare_data import prepare_wiki, prepare_cian
 from pyhive import hive
 import pandas as pd
+import redis
 
 
 default_args = {
@@ -13,7 +14,6 @@ default_args = {
     'retries': 1,
 }
 
-
 def extract_data():
    wiki_df = extract_stats_wiki()
    cian_df = extract_products_list_cian()
@@ -21,9 +21,9 @@ def extract_data():
 
 
 def preprocess_data(wiki_df, cian_df):
-    res_wiki = prepare_wiki(wiki_df)
-    res_cian = prepare_cian(cian_df)
-    return res_wiki, res_cian
+    wiki_df = prepare_wiki(wiki_df)
+    cian_df = prepare_cian(cian_df)
+    return wiki_df, cian_df
 
 
 def load_to_hive(wiki_df, cian_df):
@@ -65,14 +65,44 @@ def load_to_hive(wiki_df, cian_df):
     """)
 
     cursor.close()
-    wiki_df.to_sql('wiki_table', conn, if_exists='replace', index=False)
-    cian_df.to_sql('cian_table', conn, if_exists='replace', index=False)
+    for start in range(0, len(wiki_df), 50):  
+        end = start + 50
+        batch = wiki_df[start:end]
+        batch.to_sql('wiki_table', conn, if_exists='append', index=False)
+
+    for start in range(0, len(cian_df), 50):  
+        end = start + 50
+        batch = cian_df[start:end]
+        batch.to_sql('cian_table', conn, if_exists='append', index=False)
     conn.close()
 
 
 def load_to_redis():
-    pass
 
+    hive_conn = hive.Connection(host='hive', port=10000, username='hive')
+
+    wiki_query = "SELECT * FROM wiki_table"
+    wiki_df = pd.read_sql(wiki_query, hive_conn)
+
+    cian_query = "SELECT * FROM cian_table"
+    cian_df = pd.read_sql(cian_query, hive_conn)
+
+    hive_conn.close()
+    r = redis.Redis(host='redis', port=6379, db=0)
+
+    for start in range(0, len(wiki_df), 50): 
+        end = start + 50
+        batch = wiki_df[start:end]
+        for index, row in batch.iterrows():
+            r.hmset(f"wiki:{row['Area']}", row.to_dict()) 
+
+    for start in range(0, len(cian_df), 50):  
+        end = start + 50
+        batch = cian_df[start:end]
+        for index, row in batch.iterrows():
+            cian_key = f"cian:{row['id']}"
+            r.hmset(cian_key, row.to_dict())  
+            r.sadd(f"area:{row['okrug']}:cian_ids", row['id']) 
 
 with DAG('feature_prepare_dag',
          default_args=default_args,
