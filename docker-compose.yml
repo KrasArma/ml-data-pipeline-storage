@@ -1,71 +1,109 @@
 version: '3.8'
 
 services:
-  airflow:
+      
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=metastore
+      - POSTGRES_USER=hive
+      - POSTGRES_PASSWORD=hive
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+
+  airflow-webserver:
     build:
       context: ./airflow
       dockerfile: Dockerfile
+    container_name: airflow-webserver
+    depends_on:
+      - redis
+      - postgres
     ports:
       - "8080:8080"
-    depends_on:
-      - redis
-      - hive
-      - mysql
-
-  hive:
-    image: bde2020/hive:2.3.0
-    environment:
-      HIVE_METASTORE_DB: "mysql" 
-      MYSQL_HOST: "mysql"  
-      MYSQL_PORT: "3306"
-      MYSQL_USER: "hive"
-      MYSQL_PASSWORD: "hive"
-      MYSQL_DATABASE: "hive"
-    ports:
-      - "10000:10000"
-      - "10002:10002"
-    depends_on:
-      - mysql
-
-  mysql:
-    image: mysql:5.7
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: hive
-      MYSQL_USER: hive
-      MYSQL_PASSWORD: hive
-    ports:
-      - "3306:3306"
-
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-
-  mlflow:
-    build:
-      context: ./mlflow
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
     volumes:
-      - ./mlflow_artifacts:/mlflow/artifacts
-    depends_on:
-      - mysql
-      - redis
+      - ./airflow/dags:/opt/airflow/dags
     environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
+      - PYTHONPATH=/opt/airflow/dags
+      - AIRFLOW__WEBSERVER__SECRET_KEY=key
+      - AIRFLOW__WEBSERVER__AUTHENTICATE=True
+      - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.contrib.auth.backends.password
+      - AIRFLOW__WEBSERVER__USER_NAME=admin
+      - AIRFLOW__WEBSERVER__PASSWORD=admin
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://hive:hive@postgres:5432/metastore
+    command: >
+      bash -c "airflow db upgrade && airflow webserver"
+
+  airflow-scheduler:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow-scheduler
+    depends_on:
+      - redis
+      - postgres
+      - airflow-webserver
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    environment:
+      - AIRFLOW__WEBSERVER__SECRET_KEY=key
+      - PYTHONPATH=/opt/airflow/dags
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://hive:hive@postgres:5432/metastore
+    command: >
+      bash -c "airflow db upgrade && airflow scheduler"
+
+
+
+#   mlflow:
+#     build:
+#       context: ./mlflow
+#       dockerfile: Dockerfile
+#     ports:
+#       - "5000:5000"
+#     volumes:
+#       - ./mlflow/mlflow_artifacts:/mlflow/artifacts
+#     depends_on:
+#       - mysql
+#       - redis
+#     environment:
+#       MLFLOW_TRACKING_URI: http://mlflow:5000
+
+# volumes:
+#   mlflow_artifacts:
 
   service:
     build:
       context: ./service
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./mlflow/artifacts:/mlflow/artifacts
+    container_name: service
     depends_on:
-      - mlflow
       - redis
-  volumes:
-    mlflow_artifacts:
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: python test.py 
+    
+volumes:
+  redis_data: 

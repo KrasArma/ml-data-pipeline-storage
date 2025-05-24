@@ -18,12 +18,13 @@ def extract_data_product(ids):
         "cargoLiftsCount": r'"cargoLiftsCount":\s*([^,\n]+)',
         "houseMaterialType": r'"houseMaterialType":\s*"([^,\n]+)"'
     }
+    html_content = ''
 
     for id in ids:
         url = f'https://www.cian.ru/sale/flat/{id}/'
         session = requests.Session()
         response = session.get(url)
-
+        
         if response.status_code == 200:
             html_content = response.text
 
@@ -53,7 +54,7 @@ def extract_data_product(ids):
 def extract_products_list_cian(): 
     url = 'https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&object_type%5B0%5D=1&offer_type=flat&region=1&room1=1&room2=1' 
     session = requests.Session()
-
+    html_content = ''
     response = session.get(url)
     if response.status_code == 200:
         html_content = response.text
@@ -71,7 +72,7 @@ def extract_stats_wiki():
     url = 'https://ru.wikipedia.org/wiki/%D0%90%D0%B4%D0%BC%D0%B8%D0%BD%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE-%D1%82%D0%B5%D1%80%D1%80%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5_%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D1%8B'
     session = requests.Session()
     response = session.get(url)
-
+    html_content = ''
     if response.status_code == 200:
         html_content = response.text
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -88,11 +89,11 @@ def extract_stats_wiki():
             title.append([ele for ele in cols if ele]) 
 
         df_areas = pd.concat(
-                    [
+            [
                 pd.DataFrame([item[0] for item in title[4:16]], columns=['Area']), 
                 pd.DataFrame(data[4:16],columns=title[3][1:11])
-                ], axis=1
-            ) 
+            ], axis=1
+        ) 
         df_areas.set_index('Area', inplace=True)
 
         return df_areas
