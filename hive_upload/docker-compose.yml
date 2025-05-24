@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8
     container_name: namenode
@@ -10,8 +7,7 @@ services:
     volumes:
       - namenode:/hadoop/dfs/name
     ports:
-      - "9870:9870"
-      - "50070:50070"
+      - "9870:9870"  
 
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8
@@ -23,13 +19,12 @@ services:
     depends_on:
       - namenode
     ports:
-      - "9864:9864"
+      - "9864:9864"  
 
   hive-metastore-postgresql:
     image: postgres:13
     container_name: hive-metastore-postgresql
     environment:
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
       - POSTGRES_DB=metastore
       - POSTGRES_USER=hive
       - POSTGRES_PASSWORD=hive
@@ -42,7 +37,6 @@ services:
     image: bde2020/hive:2.3.2-postgresql-metastore
     container_name: hive-metastore
     environment:
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
       - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore-postgresql:5432/metastore
       - HIVE_CORE_CONF_javax_jdo_option_ConnectionDriverName=org.postgresql.Driver
       - HIVE_CORE_CONF_javax_jdo_option_ConnectionUserName=hive
@@ -55,15 +49,11 @@ services:
       - datanode
     ports:
       - "9083:9083"
-    volumes:
-      - airflow_hive_shared:/tmp/airflow_data
 
   hive-server:
     image: bde2020/hive:2.3.2-postgresql-metastore
     container_name: hive-server
-    restart: unless-stopped
     environment:
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
       - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore-postgresql:5432/metastore
       - HIVE_CORE_CONF_javax_jdo_option_ConnectionDriverName=org.postgresql.Driver
       - HIVE_CORE_CONF_javax_jdo_option_ConnectionUserName=hive
@@ -75,75 +65,10 @@ services:
       - namenode
       - datanode
     ports:
-      - "10000:10000"
-      - "10002:10002"
-    volumes:
-      - airflow_hive_shared:/tmp/airflow_data
-
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
-
-  airflow-webserver:
-    build:
-      context: ./airflow
-      dockerfile: Dockerfile
-    container_name: airflow-webserver
-    depends_on:
-      - redis
-      - hive-server
-      - hive-metastore
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - airflow_hive_shared:/tmp/airflow_data
-    environment:
-      - PYTHONPATH=/opt/airflow/dags
-    command: >
-      bash -c "airflow db upgrade && airflow webserver"
-
-  airflow-scheduler:
-    build:
-      context: ./airflow
-      dockerfile: Dockerfile
-    container_name: airflow-scheduler
-    depends_on:
-      - redis
-      - hive-server
-      - hive-metastore
-      - airflow-webserver
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - airflow_hive_shared:/tmp/airflow_data
-    environment:
-      - PYTHONPATH=/opt/airflow/dags
-    command: >
-      bash -c "airflow db upgrade && airflow scheduler"
+      - "10000:10000"  
+      - "10002:10002" 
 
 volumes:
   namenode:
   datanode:
   pg_metastore:
-  airflow_hive_shared:
-
-
-
-#   mlflow:
-#     build:
-#       context: ./mlflow
-#       dockerfile: Dockerfile
-#     ports:
-#       - "5000:5000"
-#     volumes:
-#       - ./mlflow/mlflow_artifacts:/mlflow/artifacts
-#     depends_on:
-#       - mysql
-#       - redis
-#     environment:
-#       MLFLOW_TRACKING_URI: http://mlflow:5000
-
-# volumes:
-#   mlflow_artifacts:

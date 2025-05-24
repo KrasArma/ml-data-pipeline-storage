@@ -1,0 +1,17 @@
+
+__pycache__/
+*.py[cod]
+
+*.cache
+*.tmp
+.cache/
+.tmp/
+
+*~
+*.log
+*.pid
+*.seed
+
+node_modules/
+.idea/
+.vscode/

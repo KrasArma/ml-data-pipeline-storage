@@ -88,11 +88,11 @@ def extract_stats_wiki():
             title.append([ele for ele in cols if ele]) 
 
         df_areas = pd.concat(
-                    [
+            [
                 pd.DataFrame([item[0] for item in title[4:16]], columns=['Area']), 
                 pd.DataFrame(data[4:16],columns=title[3][1:11])
-                ], axis=1
-            ) 
+            ], axis=1
+        ) 
         df_areas.set_index('Area', inplace=True)
 
         return df_areas
