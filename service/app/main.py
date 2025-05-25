@@ -1,9 +1,28 @@
-from fastapi import FastAPI
-from app.services import process_request
-from app.schemas import RequestSchema, ResponseSchema
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from .model_pipeline import PipelineModel  
+import logging
+from .log_conf import logger 
+from .models import TQuery
+
 
 app = FastAPI()
+pipeline_model = PipelineModel()
 
-@app.post("/process", response_model=ResponseSchema)
-async def process(request: RequestSchema):
-    return await process_request(request)
+
+@app.post("/process")
+async def process_request(query: TQuery):
+    logger.info(f"Received request: {query}")
+
+    try:
+        result = pipeline_model.process(query)
+        return result
+
+    except Exception as e:
+        logger.error(f"Error processing request: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5051)
