@@ -94,8 +94,6 @@ def extract_stats_wiki():
                 pd.DataFrame(data[4:16],columns=title[3][1:11])
             ], axis=1
         ) 
-        df_areas.set_index('Area', inplace=True)
-
         return df_areas
 
 

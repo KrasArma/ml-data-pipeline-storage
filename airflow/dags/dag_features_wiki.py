@@ -29,31 +29,18 @@ def preprocess_data(**context):
     ti = context['ti']
     wiki_df = pd.DataFrame(ti.xcom_pull(key='wiki_df', task_ids='extract_data'))
     wiki_df = prepare_wiki(wiki_df)
-    
-    areas = {
-        'ЦАО': 'CAO',
-        'САО': 'SAO',
-        'СВАО': 'SVAO',
-        'ВАО': 'VAO',
-        'ЮВАО': 'UVAO',
-        'ЮАО': 'UAO',
-        'ЮЗАО': 'UZAO',
-        'ЗАО': 'ZAO',
-        'СЗАО': 'SZAO',
-        'ЗелАО': 'ZelAO',
-        'ТАО': 'TAO',
-        'НАО': 'NAO'
-    }
-
-    wiki_df['lat_area'] = wiki_df['Area'].map(areas)
 
     context['ti'].xcom_push(key='wiki_df', value=wiki_df.to_dict())
+    logging.info(f"prepared in preprocess_data wiki_df columns: {wiki_df.columns.tolist()}")
     logging.info("Data preprocessing completed")
 
 def load_to_db(**context):
     ti = context['ti']
     wiki_df = pd.DataFrame(ti.xcom_pull(key='wiki_df', task_ids='preprocess_data'))
-
+    logging.info(f"Original column names in wiki_df: {wiki_df.columns.tolist()}")
+    wiki_df = wiki_df[['Area', 'Area_km2', 'Area_percentage', 'Rank_Area', 
+                   'Population_2024', 'Population_percentage', 
+                   'Rank_Population', 'Density_2024', 'Rank_Density', 'lat_area']]
     conn = psycopg2.connect(
         dbname='metastore',
         user='hive',
@@ -100,20 +87,34 @@ def load_to_db(**context):
     cursor.close()
     conn.close()
     logging.info("Data loaded to PostgreSQL successfully.")
-def load_to_redis(**context):
-    ti = context['ti']
-    wiki_df = pd.DataFrame(ti.xcom_pull(key='wiki_df', task_ids='preprocess_data'))
+
+def load_to_redis():
+    conn = psycopg2.connect(
+        dbname='metastore',
+        user='hive',
+        password='hive',
+        host='postgres',
+        port='5432'
+    )
+    cursor = conn.cursor()
 
     r = redis.Redis(host='redis', port=6379, db=0)
 
-    for _, row in wiki_df.iterrows():
+    cursor.execute("SELECT * FROM wiki_table")
+    rows = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+
+    for row in rows:
         try:
-            area_key = f"wiki:{row['Area']}" 
-            r.hset(area_key, mapping=row.to_dict())
+            area_key = f"wiki:{row[0]}"  
+            row_dict = dict(zip(columns, row))
+            r.hset(area_key, mapping=row_dict)
             logging.info(f"Loaded data to Redis under key: {area_key}")
         except Exception as e:
-            logging.error(f"Error loading data for wiki area {row['Area']}: {e}")
+            logging.error(f"Error loading data for wiki area {row[0]}: {e}")
 
+    cursor.close()
+    conn.close()
     logging.info("Data loading to Redis completed")
     
 with DAG('wiki_data_processing_dag',
@@ -145,5 +146,4 @@ with DAG('wiki_data_processing_dag',
         provide_context=True,
     )
     
-
     extract >> preprocess >> load_db >> load_redis
