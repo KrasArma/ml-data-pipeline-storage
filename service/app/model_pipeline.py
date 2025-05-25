@@ -2,7 +2,7 @@ from .ml_space import ModelXGBoost
 from dataclasses import dataclass, field
 from typing import Dict, Any
 from .db_manager import RedisOkrugFetcher
-from .models import Features, RedisData
+from .models import Features, RedisData, TResponseFail, TResponse
 import pandas as pd
 
 
@@ -12,14 +12,14 @@ class PipelineModel:
         self.redisfetch = RedisOkrugFetcher()
         self.model = ModelXGBoost('./app/config.json')
 
-    def failure_responce(self, request_id, message):
+    def failure_responce(self, request_id, message) -> TResponseFail:
         return {
             "request_id": request_id,
             "message": message, 
             "status": "fail"
         }
 
-    def process(self, query: Dict[str, Any]): 
+    def process(self, query: Dict[str, Any]) -> TResponse: 
 
         
         if 'request_id' not in query or 'features' not in query or 'okrug' not in query['features']:

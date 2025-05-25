@@ -3,14 +3,14 @@ from pydantic import BaseModel
 from .model_pipeline import PipelineModel  
 import logging
 from .log_conf import logger 
-from .models import TQuery
-
+from .models import TQuery, TResponse
+import uvicorn
 
 app = FastAPI()
 pipeline_model = PipelineModel()
 
 
-@app.post("/process")
+@app.post("/process", response_model=TResponse)
 async def process_request(query: TQuery):
     logger.info(f"Received request: {query}")
 
@@ -24,5 +24,5 @@ async def process_request(query: TQuery):
 
 
 if __name__ == "__main__":
-    import uvicorn
+    
     uvicorn.run(app, host="0.0.0.0", port=5051)

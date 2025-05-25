@@ -28,9 +28,13 @@ class TQuery(TypedDict):
 
 class TResponse(TypedDict):
     request_id: str
-    result: float
+    result: Union[float, str]
     status: str
 
+class TResponseFail(TypedDict):
+    request_id: str
+    message: str
+    status: str
 
 @dataclass
 class Features:

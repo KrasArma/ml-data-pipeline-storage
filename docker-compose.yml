@@ -74,24 +74,16 @@ services:
     command: >
       bash -c "airflow db upgrade && airflow scheduler"
 
-
-
-#   mlflow:
-#     build:
-#       context: ./mlflow
-#       dockerfile: Dockerfile
-#     ports:
-#       - "5000:5000"
-#     volumes:
-#       - ./mlflow/mlflow_artifacts:/mlflow/artifacts
-#     depends_on:
-#       - mysql
-#       - redis
-#     environment:
-#       MLFLOW_TRACKING_URI: http://mlflow:5000
-
-# volumes:
-#   mlflow_artifacts:
+  mlflow:
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_artifacts:/mlflow/artifacts
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
 
   service:
     build:
@@ -100,10 +92,15 @@ services:
     container_name: service
     depends_on:
       - redis
+      - mlflow  
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    command: python test.py 
+      - MLFLOW_TRACKING_URI=http://mlflow:5000 
+    ports:
+      - "5051:5051" 
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5051
     
 volumes:
   redis_data: 
+  mlflow_artifacts:
