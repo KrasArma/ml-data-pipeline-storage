@@ -11,6 +11,7 @@ import os
 import psycopg2
 import numpy as np
 
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2025, 5, 23),
@@ -234,12 +235,6 @@ def load_to_db(**context):
             bool(row.get('houseMaterialType_panel', 0)) 
         )
     )
-
-
-import logging
-import psycopg2
-import pandas as pd
-import redis
 
 def load_to_redis():
     logging.info("Connecting to PostgreSQL to load data for Redis")
