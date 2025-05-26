@@ -5,8 +5,16 @@ from .log_conf import logger
 from .models import TQuery, TResponse
 import uvicorn
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
+
 pipeline_model = PipelineModel()
+
+@app.get("/routes")
+async def get_routes():
+    return [{"path": route.path, "name": route.name} for route in app.routes]
 
 
 @app.post("/process", response_model=TResponse)
