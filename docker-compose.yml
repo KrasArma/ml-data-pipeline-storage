@@ -147,17 +147,6 @@ services:
       - REDIS_ADDR=redis:6379
     depends_on:
       - redis
-  airflow-exporter:
-    image: epoch8/airflow-exporter:latest
-    container_name: airflow-exporter
-    environment:
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://hive:hive@postgres:5432/metastore
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-    ports:
-      - "9112:9112"
-    depends_on:
-      - postgres
-      - airflow-webserver
     
 volumes:
   redis_data: 
