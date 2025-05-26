@@ -1,0 +1,14 @@
+redis
+mlflow
+pydantic
+dataclasses
+typing
+pytest
+fastapi
+uvicorn
+pandas
+numpy==2.0.2
+psutil==7.0.0
+scipy==1.13.1
+xgboost==2.1.4
+prometheus-fastapi-instrumentator

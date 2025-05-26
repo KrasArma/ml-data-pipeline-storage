@@ -7,3 +7,4 @@ pytz>=2017.3
 beautifulsoup4
 redis
 psycopg2
+apache-airflow-providers-prometheus

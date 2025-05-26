@@ -1,5 +1,4 @@
 
-from pydantic import BaseModel
 from typing_extensions import TypedDict
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Union, Literal

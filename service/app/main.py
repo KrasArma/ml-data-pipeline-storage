@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from .model_pipeline import PipelineModel  
 import logging
 from .log_conf import logger 
