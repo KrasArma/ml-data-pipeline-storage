@@ -1,0 +1,41 @@
+README:
+    [ ] Clone repository
+    [ ] Create a `.env` file in the root directory
+    [ ] Create user in PostgreSQL
+    [ ] Start running system
+    [ ] Trigger DAG for data preprocessing into Data Warehouse
+    [ ] If no model: add model id in config and restart service
+    [ ] Make prediction request to service
+
+FEATURES:
+    [ ] DAG for ETL (source: Cian.ru, target: Redis)
+    [ ] DAG for ETL (source: Wikipedia.ru, target: Redis)
+    [ ] ML model inference method (XGBoost model)
+    [ ] Data validation and quality checks
+    [ ] Automated data freshness monitoring
+    [ ] Model versioning and A/B testing
+    [ ] Automated model retraining pipeline
+    [ ] Model performance monitoring
+    [ ] CI/CD pipeline setup
+    [ ] Comprehensive test coverage
+    [ ] Security hardening
+    [ ] Performance optimization
+    [ ] API rate limiting and authentication
+    [ ] Multi-tenant support
+
+ROADMAP:
+    [ ] Phase 1: Complete core infrastructure setup
+    [ ] Phase 2: Implement data pipeline enhancement
+    [ ] Phase 3: Develop model training and management
+    [ ] Phase 4: Achieve production readiness
+    [ ] Phase 5: Add advanced features and scaling
+
+BACKLOG:
+    [ ] Multi-model support architecture
+    [ ] Real-time streaming data processing
+    [ ] Advanced monitoring and alerting
+    [ ] Machine learning model marketplace
+    [ ] Data lineage tracking
+    [ ] Advanced analytics dashboard
+    [ ] Kubernetes deployment support
+    [ ] Multi-cloud deployment options 
