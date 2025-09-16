@@ -101,7 +101,7 @@ graph TB
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/ml-data-pipeline-storage.git
+git clone https://github.com/KrasArma/ml-data-pipeline-storage.git
 cd ml-data-pipeline-storage
 ```
 
@@ -147,7 +147,7 @@ MLFLOW_TRACKING_URI=http://mlflow:5000
 
 # Service Configuration
 SERVICE_PORT=5051
-AIRFLOW_SECRET_KEY=your-secret-key
+AIRFLOW_SECRET_KEY=
 ```
 
 ### Service Configuration
@@ -246,7 +246,7 @@ Configure alerts in Grafana for:
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/KrasArma/ml-data-pipeline-storage.git
 cd ml-data-pipeline-storage
 
 # Create virtual environment
@@ -266,19 +266,6 @@ pytest tests/
 2. **API Endpoints**: Extend `service/app/main.py`
 3. **Data Pipelines**: Create new DAGs in `airflow/dags/`
 4. **Monitoring**: Add custom metrics in Prometheus configuration
-
-### Testing
-
-```bash
-# Run unit tests
-pytest tests/unit/
-
-# Run integration tests
-pytest tests/integration/
-
-# Run with coverage
-pytest --cov=app tests/
-```
 
 ## Project Structure
 
@@ -320,14 +307,14 @@ The project is in active development with core infrastructure components impleme
 - [x] PostgreSQL and Redis integration
 - [x] Monitoring with Prometheus and Grafana
 
-#### Phase 2: Data Pipeline Enhancement (In Progress)
-- [ ] Complete Cian.ru data extraction DAG
-- [ ] Implement Wikipedia data extraction DAG
-- [ ] Add data validation and quality checks
-- [ ] Implement automated data freshness monitoring
+#### Phase 2: Data Pipeline Enhancement (Current)
+- [x] Complete Cian.ru data extraction DAG
+- [x] Implement Wikipedia data extraction DAG
+- [x] Add data validation and quality checks
+- [x] Implement automated data freshness monitoring
 
-#### Phase 3: Model Development (Planned)
-- [ ] XGBoost model training pipeline
+#### Phase 3: Model Development (In Progress)
+- [x] XGBoost model training pipeline
 - [ ] Model versioning and A/B testing
 - [ ] Automated model retraining
 - [ ] Model performance monitoring
